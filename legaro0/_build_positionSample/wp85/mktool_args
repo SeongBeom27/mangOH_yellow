@@ -1,0 +1,7 @@
+mkapp
+-v
+-t
+wp85
+-i
+/home/mangoh/legato_framework/legato/interfaces/airVantage
+positionSample.adef

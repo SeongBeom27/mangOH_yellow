@@ -1,0 +1,26 @@
+sandboxed: false 
+//start: auto
+executables:
+{
+    positionTest = ( position_component )
+}
+processes:
+{
+    envVars:
+    {
+        LE_LOG_LEVEL = DEBUG
+    }
+    run:
+    {
+        (positionTest)
+    }
+}
+bindings:
+{
+    positionTest.position_component.le_pos -> positioningService.le_pos
+    positionTest.position_component.le_posCtrl -> positioningService.le_posCtrl
+}
+
+
+start: auto
+version: 1.0

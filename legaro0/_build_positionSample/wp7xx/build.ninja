@@ -1,0 +1,211 @@
+# Build script for application 'positionSample'
+
+# == Auto-generated file.  Do not edit. ==
+
+builddir =./_build_positionSample/wp7xx
+
+cFlags = -I ./_build_positionSample/wp7xx -I/home/mangoh/legato_framework/legato/interfaces -I/home/mangoh/legato_framework/legato/framework/include -I/home/mangoh/myWorkspace/mangOH/legaro_app/legaro2
+
+cxxFlags = -I ./_build_positionSample/wp7xx -I/home/mangoh/legato_framework/legato/interfaces -I/home/mangoh/legato_framework/legato/framework/include -I/home/mangoh/myWorkspace/mangOH/legaro_app/legaro2
+
+ldFlags =
+
+target = wp7xx
+
+ifgenFlags =  --import-dir /home/mangoh/legato_framework/legato/interfaces --import-dir /home/mangoh/legato_framework/legato/framework/include --import-dir /home/mangoh/myWorkspace/mangOH/legaro_app/legaro2
+
+rule CompileC
+  description = Compiling C source
+  depfile = $out.d
+  command =  gcc --sysroot=/ -MMD -MF $out.d -c $in -o $out -DLE_FILENAME=`basename $in` -Wall -fPIC -Werror -fvisibility=hidden -DMK_TOOLS_BUILD  -DLEGATO_EMBEDDED $cFlags
+
+rule CompileCxx
+  description = Compiling C++ source
+  depfile = $out.d
+  command =  g++ --sysroot=/ -MMD -MF $out.d -c $in -o $out -DLE_FILENAME=`basename $in` -Wall -fPIC -Werror -fvisibility=hidden  -DMK_TOOLS_BUILD  -DLEGATO_EMBEDDED $cxxFlags
+
+rule LinkCLib
+  description = Linking C library
+  command =  gcc --sysroot=/ -shared -o $out $in $ldFlags
+
+rule LinkCxxLib
+  description = Linking C++ library
+  command =  g++ --sysroot=/ -shared -o $out $in $ldFlags
+
+rule LinkCExe
+  description = Linking C executable
+  command =  gcc --sysroot=/ -fPIE -pie -o $out $in $ldFlags
+
+rule LinkCxxExe
+  description = Linking C++ executable
+  command =  g++ --sysroot=/ -fPIE -pie -o $out $in $ldFlags
+
+rule CompileJava
+  description = Compiling Java source
+  command = javac -cp $classPath -d `dirname $out` $in && touch $out
+
+rule MakeJar
+  description = Making JAR file
+  command = INDIR=`dirname $in`; find $$INDIR -name '*.class' -printf "-C $$INDIR\n%P\n"|xargs jar -cf $out
+
+rule MakeKernelModule
+  description = Build kernel driver module
+  depfile = $out.d
+  command = make -C $in
+
+rule BuildExternal
+  description = Running external build step
+  command = cd $builddir/$workingdir && $
+            export CFLAGS="--sysroot=/ $cFlags" $
+            CXXFLAGS="--sysroot=/ $cxxFlags" $
+            LDFLAGS="--sysroot=/ $ldFlags" $
+            PATH="$${LEGATO_ROOT}/bin:$$PATH" $
+            && $
+            $externalCommand
+
+rule GenInterfaceCode
+  description = Generating IPC interface code
+  command = ifgen --output-dir $outputDir $ifgenFlags $in
+
+rule GenPyApiCExtension
+  description = Generating Python API C Extension
+  command = cextgenerator.py $in -o $workDir > /dev/null
+rule CopyFile
+  description = Copying file
+  command = cp -d -f -T $in $out
+
+rule RegenNinjaScript
+  description = Regenerating build script
+  generator = 1
+  command = mkapp --dont-run-ninja "-t" "wp7xx" "positionSample.adef"
+
+rule BundleFile
+  description = Bundling file
+  command = legato-install -m $modeFlags $in $out
+
+rule MakeAppInfoProperties
+  description = Creating info.properties
+  command = rm -f $out && $
+            md5=$$( ( cd $workingDir/staging && $
+                      find -P -print0 |LC_ALL=C sort -z && $
+                      find -P -type f -print0 |LC_ALL=C sort -z |xargs -0 md5sum && $
+                      find -P -type l -print0 |LC_ALL=C sort -z |xargs -0 -r -n 1 readlink $
+                    ) | md5sum) && $
+            md5=$${md5%% *} && $
+            ( echo "app.name=$name" && $
+              echo "app.md5=$$md5" && $
+              echo "app.version=$version" && $
+              echo "legato.version=`cat $$LEGATO_ROOT/version`" $
+            ) > $out
+
+rule PackApp
+  description = Packaging app
+  command = $
+            mtime=`stat -c %Y $adefPath` && $
+            find $workingDir/staging -exec touch --no-dereference --date=@$$mtime {} \; && $
+            (cd $workingDir/staging && find . -print0 | LC_ALL=C sort -z |tar --no-recursion --null -T - -cjf - ) > $workingDir/$name.$target && $
+            tarballSize=`stat -c '%s' $workingDir/$name.$target` && $
+            md5=`grep '^app.md5=' $in | sed 's/^app.md5=//'` && $
+            ( printf '{\n' && $
+              printf '"command":"updateApp",\n' && $
+              printf '"name":"$name",\n' && $
+              printf '"version":"$version",\n' && $
+              printf '"md5":"%s",\n' "$$md5" && $
+              printf '"size":%s\n' "$$tarballSize" && $
+              printf '}' && $
+              cat $workingDir/$name.$target $
+            ) > $out
+
+rule BinPackApp
+  description = Packaging app for distribution.
+  command = cp -r $stagingDir/* $workingDir/ && $
+            rm $workingDir/info.properties $workingDir/root.cfg && $
+            mtime=`stat -c %Y $adefPath` && $
+            find $workingDir -exec touch  --no-dereference --date=@$$mtime {} \; && $
+            (cd $workingDir/ && find . -print0 |LC_ALL=C sort -z  |tar --no-recursion --null -T - -cjf - ) > $out
+
+build $builddir/api/6412a90901ade1017008b05235a07e56/client/le_posCtrl_client.c.o: CompileC $builddir/api/6412a90901ade1017008b05235a07e56/client/le_posCtrl_client.c | $builddir/api/6412a90901ade1017008b05235a07e56/client/le_posCtrl_messages.h $builddir/api/6412a90901ade1017008b05235a07e56/client/le_posCtrl_interface.h
+  cFlags = $cFlags
+
+build $builddir/api/6412a90901ade1017008b05235a07e56/client/le_posCtrl_client.c $builddir/api/6412a90901ade1017008b05235a07e56/client/le_posCtrl_interface.h $builddir/api/6412a90901ade1017008b05235a07e56/client/le_posCtrl_messages.h: GenInterfaceCode /home/mangoh/legato_framework/legato/interfaces/positioning/le_posCtrl.api |
+  ifgenFlags = --gen-client --gen-interface --gen-local --name-prefix le_posCtrl $ifgenFlags
+  outputDir = $builddir/api/6412a90901ade1017008b05235a07e56/client
+
+build $builddir/api/56fd777a73e6c9b4a485b9f307a3c92d/client/le_pos_client.c.o: CompileC $builddir/api/56fd777a73e6c9b4a485b9f307a3c92d/client/le_pos_client.c | $builddir/api/56fd777a73e6c9b4a485b9f307a3c92d/client/le_pos_messages.h $builddir/api/56fd777a73e6c9b4a485b9f307a3c92d/client/le_pos_interface.h
+  cFlags = $cFlags
+
+build $builddir/api/56fd777a73e6c9b4a485b9f307a3c92d/client/le_pos_client.c $builddir/api/56fd777a73e6c9b4a485b9f307a3c92d/client/le_pos_interface.h $builddir/api/56fd777a73e6c9b4a485b9f307a3c92d/client/le_pos_messages.h: GenInterfaceCode /home/mangoh/legato_framework/legato/interfaces/positioning/le_pos.api |
+  ifgenFlags = --gen-client --gen-interface --gen-local --name-prefix le_pos $ifgenFlags
+  outputDir = $builddir/api/56fd777a73e6c9b4a485b9f307a3c92d/client
+
+build $builddir/api/ede38e7f038778c970dfd6c418554018/server/imu_server.o: CompileC $builddir/api/ede38e7f038778c970dfd6c418554018/server/imu_server.c | $builddir/api/ede38e7f038778c970dfd6c418554018/server/imu_messages.h $builddir/api/ede38e7f038778c970dfd6c418554018/server/imu_server.h
+  cFlags = $cFlags
+
+build $builddir/api/ede38e7f038778c970dfd6c418554018/server/imu_server.c $builddir/api/ede38e7f038778c970dfd6c418554018/server/imu_server.h $builddir/api/ede38e7f038778c970dfd6c418554018/server/imu_messages.h: GenInterfaceCode /home/mangoh/myWorkspace/mangOH/legaro_app/legaro2/interfaces/imu.api |
+  ifgenFlags = --gen-server --gen-server-interface --gen-local --name-prefix imu $ifgenFlags
+  outputDir = $builddir/api/ede38e7f038778c970dfd6c418554018/server
+
+build $builddir/api/b5dd1c52dbdec908d3f2da74e9aa597a/server/temperature_server.o: CompileC $builddir/api/b5dd1c52dbdec908d3f2da74e9aa597a/server/temperature_server.c | $builddir/api/b5dd1c52dbdec908d3f2da74e9aa597a/server/temperature_messages.h $builddir/api/b5dd1c52dbdec908d3f2da74e9aa597a/server/temperature_server.h
+  cFlags = $cFlags
+
+build $builddir/api/b5dd1c52dbdec908d3f2da74e9aa597a/server/temperature_server.c $builddir/api/b5dd1c52dbdec908d3f2da74e9aa597a/server/temperature_server.h $builddir/api/b5dd1c52dbdec908d3f2da74e9aa597a/server/temperature_messages.h: GenInterfaceCode /home/mangoh/myWorkspace/mangOH/legaro_app/legaro2/interfaces/temperature.api |
+  ifgenFlags = --gen-server --gen-server-interface --gen-local --name-prefix temperature $ifgenFlags
+  outputDir = $builddir/api/b5dd1c52dbdec908d3f2da74e9aa597a/server
+
+build _build_positionSample/wp7xx/staging/read-only/lib/libComponent_position_component.so: LinkCLib $builddir/component/98bd4c822b44f594dbd7c208eeeb92e9/obj/b463c5a0366925e996453bd9bb1f0f44.o $builddir/component/98bd4c822b44f594dbd7c208eeeb92e9/obj/9d706b50b3fdea8e5e207ff7cd4656b0.o $builddir/api/6412a90901ade1017008b05235a07e56/client/le_posCtrl_client.c.o $builddir/api/56fd777a73e6c9b4a485b9f307a3c92d/client/le_pos_client.c.o $builddir/api/ede38e7f038778c970dfd6c418554018/server/imu_server.o $builddir/api/b5dd1c52dbdec908d3f2da74e9aa597a/server/temperature_server.o $builddir/component/98bd4c822b44f594dbd7c208eeeb92e9/obj/_componentMain.c.o | /home/mangoh/legato_framework/legato/build/wp7xx/framework/lib/liblegato.so _build_positionSample/wp7xx/staging/read-only/lib/libComponent_fileUtils.so /home/mangoh/legato_framework/legato/build/wp7xx/framework/lib/liblegato.so
+  ldFlags =  -lcurl -L_build_positionSample/wp7xx/staging/read-only/lib -Wl,--enable-new-dtags,-rpath="\$$ORIGIN/../lib" "-L_build_positionSample/wp7xx/staging/read-only/lib" -lComponent_fileUtils "-L$$LEGATO_BUILD/framework/lib" -llegato -lpthread -lrt -lm
+
+build $builddir/component/98bd4c822b44f594dbd7c208eeeb92e9/obj/b463c5a0366925e996453bd9bb1f0f44.o: CompileC /home/mangoh/myWorkspace/mangOH/legaro_app/legaro2/position_component/positionSample.c || $builddir/api/ede38e7f038778c970dfd6c418554018/server/imu_server.h $builddir/api/ede38e7f038778c970dfd6c418554018/server/imu_messages.h $builddir/api/b5dd1c52dbdec908d3f2da74e9aa597a/server/temperature_server.h $builddir/api/b5dd1c52dbdec908d3f2da74e9aa597a/server/temperature_messages.h $builddir/api/6412a90901ade1017008b05235a07e56/client/le_posCtrl_interface.h $builddir/api/6412a90901ade1017008b05235a07e56/client/le_posCtrl_messages.h $builddir/api/56fd777a73e6c9b4a485b9f307a3c92d/client/le_pos_interface.h $builddir/api/56fd777a73e6c9b4a485b9f307a3c92d/client/le_pos_messages.h 
+  cFlags = $cFlags -I$builddir/component/98bd4c822b44f594dbd7c208eeeb92e9/src -I$builddir/api/ede38e7f038778c970dfd6c418554018/server -I$builddir/api/b5dd1c52dbdec908d3f2da74e9aa597a/server -I$builddir/api/6412a90901ade1017008b05235a07e56/client -I$builddir/api/56fd777a73e6c9b4a485b9f307a3c92d/client -DLE_COMPONENT_NAME=position_component -DLE_LOG_SESSION=position_component_LogSession  -DLE_LOG_LEVEL_FILTER_PTR=position_component_LogLevelFilterPtr  "-DCOMPONENT_INIT=LE_CI_LINKAGE LE_SHARED void _position_component_COMPONENT_INIT()"
+
+build $builddir/component/98bd4c822b44f594dbd7c208eeeb92e9/obj/9d706b50b3fdea8e5e207ff7cd4656b0.o: CompileC /home/mangoh/myWorkspace/mangOH/legaro_app/legaro2/position_component/position.c || $builddir/api/ede38e7f038778c970dfd6c418554018/server/imu_server.h $builddir/api/ede38e7f038778c970dfd6c418554018/server/imu_messages.h $builddir/api/b5dd1c52dbdec908d3f2da74e9aa597a/server/temperature_server.h $builddir/api/b5dd1c52dbdec908d3f2da74e9aa597a/server/temperature_messages.h $builddir/api/6412a90901ade1017008b05235a07e56/client/le_posCtrl_interface.h $builddir/api/6412a90901ade1017008b05235a07e56/client/le_posCtrl_messages.h $builddir/api/56fd777a73e6c9b4a485b9f307a3c92d/client/le_pos_interface.h $builddir/api/56fd777a73e6c9b4a485b9f307a3c92d/client/le_pos_messages.h 
+  cFlags = $cFlags -I$builddir/component/98bd4c822b44f594dbd7c208eeeb92e9/src -I$builddir/api/ede38e7f038778c970dfd6c418554018/server -I$builddir/api/b5dd1c52dbdec908d3f2da74e9aa597a/server -I$builddir/api/6412a90901ade1017008b05235a07e56/client -I$builddir/api/56fd777a73e6c9b4a485b9f307a3c92d/client -DLE_COMPONENT_NAME=position_component -DLE_LOG_SESSION=position_component_LogSession  -DLE_LOG_LEVEL_FILTER_PTR=position_component_LogLevelFilterPtr  "-DCOMPONENT_INIT=LE_CI_LINKAGE LE_SHARED void _position_component_COMPONENT_INIT()"
+
+build $builddir/component/98bd4c822b44f594dbd7c208eeeb92e9/obj/_componentMain.c.o: CompileC $builddir/component/98bd4c822b44f594dbd7c208eeeb92e9/src/_componentMain.c
+  cFlags = $cFlags -I$builddir/component/98bd4c822b44f594dbd7c208eeeb92e9/src -I$builddir/api/ede38e7f038778c970dfd6c418554018/server -I$builddir/api/b5dd1c52dbdec908d3f2da74e9aa597a/server -I$builddir/api/6412a90901ade1017008b05235a07e56/client -I$builddir/api/56fd777a73e6c9b4a485b9f307a3c92d/client -DLE_COMPONENT_NAME=position_component -DLE_LOG_SESSION=position_component_LogSession  -DLE_LOG_LEVEL_FILTER_PTR=position_component_LogLevelFilterPtr  "-DCOMPONENT_INIT=LE_CI_LINKAGE LE_SHARED void _position_component_COMPONENT_INIT()"
+
+build _build_positionSample/wp7xx/staging/read-only/lib/libComponent_fileUtils.so: LinkCLib $builddir/component/4406423a49291ea7e73220826cd88837/obj/f89e21044221486a127abf9179234fa3.o $builddir/component/4406423a49291ea7e73220826cd88837/obj/_componentMain.c.o | /home/mangoh/legato_framework/legato/build/wp7xx/framework/lib/liblegato.so
+  ldFlags =  -L_build_positionSample/wp7xx/staging/read-only/lib -Wl,--enable-new-dtags,-rpath="\$$ORIGIN/../lib" "-L$$LEGATO_BUILD/framework/lib" -llegato -lpthread -lrt -lm
+
+build $builddir/component/4406423a49291ea7e73220826cd88837/obj/f89e21044221486a127abf9179234fa3.o: CompileC /home/mangoh/myWorkspace/mangOH/legaro_app/legaro2/fileUtils/fileUtils.c
+  cFlags = $cFlags -I$builddir/component/4406423a49291ea7e73220826cd88837/src -DLE_COMPONENT_NAME=fileUtils -DLE_LOG_SESSION=fileUtils_LogSession  -DLE_LOG_LEVEL_FILTER_PTR=fileUtils_LogLevelFilterPtr  "-DCOMPONENT_INIT=LE_CI_LINKAGE LE_SHARED void _fileUtils_COMPONENT_INIT()"
+
+build $builddir/component/4406423a49291ea7e73220826cd88837/obj/_componentMain.c.o: CompileC $builddir/component/4406423a49291ea7e73220826cd88837/src/_componentMain.c
+  cFlags = $cFlags -I$builddir/component/4406423a49291ea7e73220826cd88837/src -DLE_COMPONENT_NAME=fileUtils -DLE_LOG_SESSION=fileUtils_LogSession  -DLE_LOG_LEVEL_FILTER_PTR=fileUtils_LogLevelFilterPtr  "-DCOMPONENT_INIT=LE_CI_LINKAGE LE_SHARED void _fileUtils_COMPONENT_INIT()"
+
+build $builddir/app/positionSample/obj/positionTest/_main.c.o: CompileC _build_positionSample/wp7xx/app/positionSample/src/positionTest/_main.c
+  cFlags = $cFlags -DLE_COMPONENT_NAME=positionTest_exe -DLE_LOG_SESSION=positionTest_exe_LogSession -DLE_LOG_LEVEL_FILTER_PTR=positionTest_exe_LogLevelFilterPtr 
+
+build $builddir/app/positionSample/obj/positionTest/positionTest: LinkCExe $builddir/app/positionSample/obj/positionTest/_main.c.o |    _build_positionSample/wp7xx/staging/read-only/lib/libComponent_fileUtils.so /home/mangoh/legato_framework/legato/build/wp7xx/framework/lib/liblegato.so _build_positionSample/wp7xx/staging/read-only/lib/libComponent_position_component.so /home/mangoh/legato_framework/legato/build/wp7xx/framework/lib/liblegato.so /home/mangoh/legato_framework/legato/build/$target/framework/lib/liblegato.so
+  ldFlags = -rdynamic -Wl,--enable-new-dtags,-rpath="\$$ORIGIN/../lib" -L_build_positionSample/wp7xx/staging/read-only/lib "-L_build_positionSample/wp7xx/staging/read-only/lib" -lComponent_position_component -lcurl "-L_build_positionSample/wp7xx/staging/read-only/lib" -lComponent_fileUtils "-L$$LEGATO_BUILD/framework/lib" -llegato -lpthread -lrt -ldl -lm $ldFlags
+
+build $builddir/app/positionSample/staging/read-only/lib/libComponent_position_component.so : BundleFile _build_positionSample/wp7xx/staging/read-only/lib/libComponent_position_component.so
+  modeFlags = u+rw+x,g+r+x,o+x+r-w
+
+build $builddir/app/positionSample/staging/read-only/lib/libcurl.so.4 : BundleFile //usr/lib/x86_64-linux-gnu/libcurl.so.4
+  modeFlags = u+rw-x,g+r-x,o-x+r-w
+build $builddir/app/positionSample/staging/read-only/lib/libcrypto.so.1.1 : BundleFile //usr/lib/x86_64-linux-gnu/libcrypto.so.1.1
+  modeFlags = u+rw-x,g+r-x,o-x+r-w
+build $builddir/app/positionSample/staging/read-only/lib/libssl.so.1.1 : BundleFile //usr/lib/x86_64-linux-gnu/libssl.so.1.1
+  modeFlags = u+rw-x,g+r-x,o-x+r-w
+build $builddir/app/positionSample/staging/read-only/lib/libz.so.1 : BundleFile //lib/x86_64-linux-gnu/libz.so.1
+  modeFlags = u+rw-x,g+r-x,o-x+r-w
+build $builddir/app/positionSample/staging/read-only/lib/libComponent_fileUtils.so : BundleFile _build_positionSample/wp7xx/staging/read-only/lib/libComponent_fileUtils.so
+  modeFlags = u+rw+x,g+r+x,o+x+r-w
+
+build $builddir/app/positionSample/staging/read-only/bin/positionTest : BundleFile $builddir/app/positionSample/obj/positionTest/positionTest
+  modeFlags = u+rw+x,g+r+x,o+x+r-w
+
+build $builddir/app/positionSample/staging/info.properties : MakeAppInfoProperties | $builddir/app/positionSample/staging/read-only/lib/libComponent_fileUtils.so $builddir/app/positionSample/staging/read-only/lib/libComponent_position_component.so $builddir/app/positionSample/staging/read-only/lib/libcrypto.so.1.1 $builddir/app/positionSample/staging/read-only/lib/libcurl.so.4 $builddir/app/positionSample/staging/read-only/lib/libssl.so.1.1 $builddir/app/positionSample/staging/read-only/lib/libz.so.1 $builddir/app/positionSample/staging/read-only/bin/positionTest $builddir/app/positionSample/staging/root.cfg
+  name = positionSample
+  version = 1.0
+  workingDir = $builddir/app/positionSample
+
+build positionSample.$target.update: PackApp $builddir/app/positionSample/staging/info.properties
+  name = positionSample
+  adefPath = /home/mangoh/myWorkspace/mangOH/legaro_app/legaro2/positionSample.adef
+  version = 1.0
+  workingDir = $builddir/app/positionSample
+
+build _build_positionSample/wp7xx/build.ninja: RegenNinjaScript | /home/mangoh/legato_framework/legato/components/3rdParty/curl/Component.cdef /home/mangoh/legato_framework/legato/components/3rdParty/openssl/Component.cdef /home/mangoh/legato_framework/legato/components/3rdParty/zlib/Component.cdef /home/mangoh/legato_framework/legato/interfaces/positioning/le_pos.api /home/mangoh/legato_framework/legato/interfaces/positioning/le_posCtrl.api /home/mangoh/myWorkspace/mangOH/legaro_app/legaro2/fileUtils/Component.cdef /home/mangoh/myWorkspace/mangOH/legaro_app/legaro2/interfaces/imu.api /home/mangoh/myWorkspace/mangOH/legaro_app/legaro2/interfaces/temperature.api /home/mangoh/myWorkspace/mangOH/legaro_app/legaro2/position_component/Component.cdef
+

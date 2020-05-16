@@ -1,0 +1,19 @@
+executables:
+{ 
+    LED_test = ( led_Component )
+}
+
+bindings:
+{
+      LED_test.led_Component.le_gpioPin23 -> gpioService.le_gpioPin23
+}
+
+processes:
+{
+    run:
+    {
+        ( LED_test )
+    }
+}
+
+
